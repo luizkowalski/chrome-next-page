@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Page Navigator Settings</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #4285f4;
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      color: #555;
+      margin-top: 0;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background: #3367d6;
+    }
+
+    .examples {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 15px;
+    }
+
+    .examples h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .example {
+      margin: 10px 0;
+      padding: 5px;
+      background: white;
+      border-left: 3px solid #4285f4;
+      padding-left: 10px;
+    }
+
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <h1>Page Navigator Settings</h1>
+
+  <div class="section">
+    <h2>Built-in Patterns</h2>
+    <p>The extension automatically detects these common pagination patterns:</p>
+    <ul>
+      <li><code>/page/2</code> or <code>/pages/2</code></li>
+      <li><code>?page=2</code> or <code>?pages=2</code></li>
+      <li><code>?p=2</code></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Custom Patterns</h2>
+    <p>Add your own patterns in JSON format. Each pattern should have a <code>pattern</code> (regex) and <code>replacement</code> template:</p>
+
+    <textarea id="customPatterns" placeholder='[
+  {
+    "pattern": "/offset/(\\d+)",
+    "replacement": "/offset/$1"
+  },
+  {
+    "pattern": "[?&]start=(\\d+)",
+    "replacement": "?start=$1"
+  }
+]'></textarea>
+
+    <div class="status" id="status"></div>
+
+    <button onclick="saveSettings()">Save Settings</button>
+    <button onclick="resetSettings()">Reset to Default</button>
+
+    <div class="examples">
+      <h3>Pattern Examples</h3>
+      <div class="example">
+        <strong>Reddit-style:</strong><br>
+        <code>{"pattern": "/offset/(\\d+)", "replacement": "/offset/$1"}</code>
+      </div>
+      <div class="example">
+        <strong>Search results:</strong><br>
+        <code>{"pattern": "[?&]start=(\\d+)", "replacement": "?start=$1"}</code>
+      </div>
+      <div class="example">
+        <strong>Forum posts:</strong><br>
+        <code>{"pattern": "/thread/\\d+/(\\d+)", "replacement": "/thread/123/$1"}</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>How to Use</h2>
+    <p>Once configured, simply use the <strong>left</strong> and <strong>right arrow keys</strong> to navigate between pages on any website that matches your patterns.</p>
+    <p>The extension will automatically detect page numbers in URLs and increment/decrement them accordingly.</p>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

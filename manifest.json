@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Page Navigator",
+  "version": "1.0",
+  "description": "Navigate between pages using left/right arrow keys",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "options_page": "options.html"
+}
