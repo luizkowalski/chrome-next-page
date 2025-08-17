@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Page Navigator",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Navigate between pages using left/right arrow keys",
   "permissions": [
     "activeTab",

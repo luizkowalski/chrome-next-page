@@ -1,0 +1,19 @@
+{
+  "name": "next-page",
+  "private": true,
+  "dependencies": {
+    "standard": "^17.1.2"
+  },
+  "scripts": {
+    "lint": "standard",
+    "lint:fix": "standard --fix",
+    "up": "bunx npm-check-updates --interactive --format group"
+  },
+  "packageManager": "bun@1.2.20",
+  "standard": {
+    "globals": ["chrome"]
+  },
+  "env": [
+    "browser"
+  ]
+}
