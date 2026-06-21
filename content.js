@@ -1,20 +1,8 @@
-// Get configuration or use defaults
-let pagePatterns = [
-  { pattern: /\/pages?\/(\d+)/, replacement: '/page/$1' },
-  { pattern: /[?&]pages?=(\d+)/, replacement: '?page=$1' },
-  { pattern: /[?&]p=(\d+)/, replacement: '?p=$1' }
-]
+const { DEFAULT_PATTERNS, loadPatterns } = globalThis.PageNavigatorPatterns
 
-// Load custom patterns from storage via background script
-chrome.runtime.sendMessage({ action: 'getCustomPatterns' }, (response) => {
-  if (response && response.customPatterns) {
-    try {
-      const custom = JSON.parse(response.customPatterns)
-      pagePatterns = [...pagePatterns, ...custom]
-    } catch (e) {
-      console.warn('Invalid custom patterns in storage')
-    }
-  }
+let pagePatterns = [...DEFAULT_PATTERNS]
+loadPatterns((patterns) => {
+  pagePatterns = patterns
 })
 
 function detectPageNumber (url) {
@@ -35,44 +23,104 @@ function generateNewUrl (currentUrl, pageInfo, direction) {
   const newPage = pageInfo.currentPage + direction
   if (newPage < 1) return null
 
-  // Handle path-based patterns like /page/2
   if (pageInfo.replacement.includes('/')) {
     return currentUrl.replace(pageInfo.pattern, pageInfo.replacement.replace('$1', newPage))
   }
 
-  // Handle query parameter patterns
   const url = new URL(currentUrl)
   const paramName = pageInfo.replacement.split('=')[0].replace('?', '')
   url.searchParams.set(paramName, newPage)
   return url.toString()
 }
 
-function navigateToPage (direction) {
-  const currentUrl = window.location.href
-  const pageInfo = detectPageNumber(currentUrl)
-
-  if (!pageInfo) return
-
-  const newUrl = generateNewUrl(currentUrl, pageInfo, direction)
-  if (newUrl) {
-    window.location.href = newUrl
+function pageNumberFor (el) {
+  const href = el.getAttribute('href')
+  if (href) {
+    try {
+      const info = detectPageNumber(new URL(href, window.location.href).href)
+      if (info) return info.currentPage
+    } catch {}
   }
+
+  const label = el.getAttribute('aria-label') || ''
+  const match = label.match(/\bpage\s+(\d+)\b/i)
+  if (match) return parseInt(match[1])
+
+  return null
 }
 
-// Handle keyboard events
+function isUsable (el) {
+  return el && !el.disabled && el.getAttribute('aria-disabled') !== 'true'
+}
+
+function opensNewTab (el) {
+  return el.tagName === 'A' && (el.target === '_blank' || el.hasAttribute('download'))
+}
+
+function findExactPageControl (targetPage) {
+  const candidates = document.querySelectorAll('a[href], button, [role="button"]')
+  for (const el of candidates) {
+    if (isUsable(el) && pageNumberFor(el) === targetPage) return el
+  }
+  return null
+}
+
+function findRelativeControl (direction) {
+  const selectors = direction > 0
+    ? [
+        'a[rel~="next"]',
+        '.artdeco-pagination__button--next',
+        '[aria-label="Next" i]',
+        '[aria-label="Next page" i]',
+        '[aria-label="Go to next page" i]'
+      ]
+    : [
+        'a[rel~="prev"]',
+        'a[rel~="previous"]',
+        '.artdeco-pagination__button--previous',
+        '[aria-label="Previous" i]',
+        '[aria-label="Previous page" i]',
+        '[aria-label="Go to previous page" i]'
+      ]
+
+  for (const selector of selectors) {
+    const el = document.querySelector(selector)
+    if (isUsable(el)) return el
+  }
+  return null
+}
+
+function navigateToPage (direction) {
+  const pageInfo = detectPageNumber(window.location.href)
+  if (!pageInfo) return false
+
+  const targetPage = pageInfo.currentPage + direction
+  if (targetPage < 1) return false
+
+  const control = findExactPageControl(targetPage) || findRelativeControl(direction)
+  if (control && !opensNewTab(control)) {
+    control.click()
+    return true
+  }
+
+  const newUrl = generateNewUrl(window.location.href, pageInfo, direction)
+  if (!newUrl) return false
+
+  window.location.href = newUrl
+  return true
+}
+
 document.addEventListener('keydown', function (event) {
-  // Only trigger on arrow keys and when no input elements are focused
-  if (document.activeElement.tagName === 'INPUT' ||
-      document.activeElement.tagName === 'TEXTAREA' ||
-      document.activeElement.isContentEditable) {
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+
+  const active = document.activeElement
+  if (active && (active.tagName === 'INPUT' ||
+      active.tagName === 'TEXTAREA' ||
+      active.isContentEditable)) {
     return
   }
 
-  if (event.key === 'ArrowLeft') {
+  if (navigateToPage(event.key === 'ArrowRight' ? 1 : -1)) {
     event.preventDefault()
-    navigateToPage(-1)
-  } else if (event.key === 'ArrowRight') {
-    event.preventDefault()
-    navigateToPage(1)
   }
 })

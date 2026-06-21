@@ -1,9 +1,10 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "nextpage",
-      "dependencies": {
+      "devDependencies": {
         "standard": "^17.1.2",
       },
     },
